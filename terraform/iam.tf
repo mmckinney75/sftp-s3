@@ -108,3 +108,57 @@ resource "aws_iam_policy" "sftp_policy_user" {
 }
 EOF
 }
+
+
+resource "aws_iam_role" "lambda_sftp_s3_role" {
+  name = "lambda_sftp-s3"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "lambda_sftp_s3_policy" {
+  name        = "lambda_sftp_s3_policy"
+  path        = "/"
+  description = "Policy to allow Lambda to manage S3 buckets"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+          "Effect": "Allow",
+          "Action": "s3:*",
+          "Resource": "*"
+    },
+    {
+          "Effect": "Allow",
+          "Action": [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents"
+          ],
+          "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_sftp_s3_attach" {
+  role       = "${aws_iam_role.lambda_sftp_s3_role.name}"
+  policy_arn = "${aws_iam_policy.lambda_sftp_s3_policy.arn}"
+}
