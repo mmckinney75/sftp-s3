@@ -1,5 +1,11 @@
-resource "aws_iam_role" "sftp_role" {
-  name = "mckinney_sftp_role"
+################################################################################
+# Role/Policy allowing Transfer SFTP service to access the S3 bucket where     #
+# files are stored.  This role is applied to all SFTP users.  Access is        #
+# restricted further by applying a ScopeDown Policy directly to the SFTP user  #
+################################################################################
+
+resource "aws_iam_role" "sftp_user_role" {
+  name = "sftp_user"
 
   assume_role_policy = <<EOF
 {
@@ -18,15 +24,15 @@ resource "aws_iam_role" "sftp_role" {
 EOF
 
   tags = {
-    name = "mckinney_sftp_role"
+    name = "sftp_user"
   }
 }
 
 
-resource "aws_iam_policy" "sftp_policy_root" {
-  name        = "mmckinney_sftp_user_root"
+resource "aws_iam_policy" "sftp_user_policy" {
+  name        = "sftp_user"
   path        = "/"
-  description = "Policy to allow root access to Transfer SFTP server"
+  description = "Policy to allow access needed by the Transfer SFTP service"
 
   policy = <<EOF
 {
@@ -60,13 +66,19 @@ resource "aws_iam_policy" "sftp_policy_root" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "sftp_attach" {
-  role       = "${aws_iam_role.sftp_role.name}"
-  policy_arn = "${aws_iam_policy.sftp_policy_root.arn}"
+resource "aws_iam_role_policy_attachment" "sftp_user_attach" {
+  role       = "${aws_iam_role.sftp_user_role.name}"
+  policy_arn = "${aws_iam_policy.sftp_user_policy.arn}"
 }
 
-resource "aws_iam_policy" "sftp_policy_user" {
-  name        = "mmckinney_sftp_user"
+################################################################################
+# Scoped Down policy which restricts users access to specific paths in the     #
+# bucket.  This policy is attached directly to the SFTP user configuration. It #
+# can use four built-in user variables to make policy dynamic.                 #
+################################################################################
+
+resource "aws_iam_policy" "sftp_scopedown_policy" {
+  name        = "sftp_user_scopedown"
   path        = "/"
   description = "Policy to allow user access to Transfer SFTP server"
 
@@ -103,62 +115,16 @@ resource "aws_iam_policy" "sftp_policy_user" {
               "s3:GetObjectVersion"
           ],
           "Resource": "arn:aws:s3:::$${Transfer:HomeDirectory}*"
+      },
+      {
+          "Sid":"DenyDirCreation",
+          "Effect":"Deny",
+          "Action":[
+              "s3:PutObject"
+          ],
+          "Resource": "arn:aws:s3:::$${Transfer:HomeDirectory}/*/"
       }
   ]
 }
 EOF
-}
-
-
-resource "aws_iam_role" "lambda_sftp_s3_role" {
-  name = "lambda_sftp-s3"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "lambda_sftp_s3_policy" {
-  name        = "lambda_sftp_s3_policy"
-  path        = "/"
-  description = "Policy to allow Lambda to manage S3 buckets"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-          "Effect": "Allow",
-          "Action": "s3:*",
-          "Resource": "*"
-    },
-    {
-          "Effect": "Allow",
-          "Action": [
-              "logs:CreateLogGroup",
-              "logs:CreateLogStream",
-              "logs:PutLogEvents"
-          ],
-          "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_sftp_s3_attach" {
-  role       = "${aws_iam_role.lambda_sftp_s3_role.name}"
-  policy_arn = "${aws_iam_policy.lambda_sftp_s3_policy.arn}"
 }

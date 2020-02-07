@@ -11,7 +11,7 @@ resource "aws_transfer_server" "sftp_server" {
 resource "aws_transfer_user" "sftp_user_rootid" {
   server_id = "${aws_transfer_server.sftp_server.id}"
   user_name = "rootid"
-  role      = "${aws_iam_role.sftp_role.arn}"
+  role      = "${aws_iam_role.sftp_user_role.arn}"
   home_directory = "/${aws_s3_bucket.sftp_bucket.id}"
 }
 
@@ -26,9 +26,9 @@ resource "aws_transfer_ssh_key" "sftp_key_rootid" {
 resource "aws_transfer_user" "sftp_user_partner1" {
   server_id = "${aws_transfer_server.sftp_server.id}"
   user_name = "partner1"
-  role      = "${aws_iam_role.sftp_role.arn}"
+  role      = "${aws_iam_role.sftp_user_role.arn}"
   home_directory = "/${aws_s3_bucket.sftp_bucket.id}/partner1"
-  policy    = "${aws_iam_policy.sftp_policy_user.policy}"
+  policy    = "${aws_iam_policy.sftp_scopedown_policy.policy}"
 }
 
 resource "aws_transfer_ssh_key" "sftp_key_partner1" {
@@ -42,9 +42,9 @@ resource "aws_transfer_ssh_key" "sftp_key_partner1" {
 resource "aws_transfer_user" "sftp_user_partner2" {
   server_id = "${aws_transfer_server.sftp_server.id}"
   user_name = "partner2"
-  role      = "${aws_iam_role.sftp_role.arn}"
+  role      = "${aws_iam_role.sftp_user_role.arn}"
   home_directory = "/${aws_s3_bucket.sftp_bucket.id}/partner2"
-  policy    = "${aws_iam_policy.sftp_policy_user.policy}"
+  policy    = "${aws_iam_policy.sftp_scopedown_policy.policy}"
 }
 
 resource "aws_transfer_ssh_key" "sftp_key_partner2" {
