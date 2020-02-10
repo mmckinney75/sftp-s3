@@ -128,3 +128,116 @@ resource "aws_iam_policy" "sftp_scopedown_policy" {
 }
 EOF
 }
+
+################################################################################
+# Role/Policy allowing AWS Transfer to make authentication requests to the     #
+# sftpUserAuth APIGateway                                                      #
+################################################################################
+
+resource "aws_iam_role" "transfer_cloudwatchLogging_role" {
+  name = "transfer_cloudwatchLogging"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "transfer_cloudwatchLogging_policy" {
+  name = "transfer_cloudwatchLogging"
+  role = "${aws_iam_role.transfer_cloudwatchLogging_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+################################################################################
+# Role/Policy allowing AWS Transfer to make authentication requests to the     #
+# sftpUserAuth APIGateway                                                      #
+################################################################################
+
+resource "aws_iam_role" "transfer_sftpUserAuthAPI_role" {
+  name = "transfer_sftpUserAuthAPI"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "transfer_sftpUserAuthAPI_policy_invoke" {
+  name = "transfer_sftpUserAuthAPI_invoke"
+  role = "${aws_iam_role.transfer_sftpUserAuthAPI_role.id}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "execute-api:Invoke"
+            ],
+            "Resource": "${aws_api_gateway_rest_api.sftp_auth_api.execution_arn}/prod/GET/*",
+            "Effect": "Allow"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "transfer_sftpUserAuthAPI_policy_read" {
+  name = "transfer_sftpUserAuthAPI_read"
+  role = "${aws_iam_role.transfer_sftpUserAuthAPI_role.id}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "apigateway:GET"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        }
+    ]
+}
+EOF
+}

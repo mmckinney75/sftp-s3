@@ -56,8 +56,6 @@ resource "aws_iam_role_policy_attachment" "lambda_sftp_s3_attach" {
   policy_arn = "${aws_iam_policy.lambda_sftp_s3_policy.arn}"
 }
 
-
-
 ################################################################################
 # Role/Policy allowing Lambda to get users authentication information from     #
 # SecretsManager.                                                              #
@@ -83,8 +81,8 @@ resource "aws_iam_role" "lambda_getUserAuthInfo_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "lambda_secretsManager_policy_inline" {
-  name = "lambda_secretsManager"
+resource "aws_iam_role_policy" "lambda_getUserAuthInfo_secretsManager_policy_inline" {
+  name = "lambda_getUserAuthInfo_secretsManager"
   role = "${aws_iam_role.lambda_getUserAuthInfo_role.id}"
 
   policy = <<EOF
