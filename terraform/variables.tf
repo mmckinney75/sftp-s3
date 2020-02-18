@@ -9,3 +9,5 @@ variable "key_name" {}
 variable "region" {}
 
 variable  "zone_name" {}
+
+variable "vpc_id" {}

@@ -5,6 +5,10 @@ import base64
 from botocore.exceptions import ClientError
 
 def lambda_handler(event, context):
+
+    print(event)
+    print(context)
+
     resp_data = {}
 
     if 'username' not in event or 'serverId' not in event:

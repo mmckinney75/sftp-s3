@@ -9,6 +9,19 @@ resource "aws_transfer_server" "sftp_server" {
   }
 }
 
+resource "aws_vpc_endpoint" "sftp_server_vpce" {
+  vpc_id       = "${var.vpc_id}"
+  service_name = "com.amazonaws.us-east-1.transfer"
+
+  vpc_endpoint_type = "Interface"
+
+  security_group_ids = [
+    "${aws_security_group.allow_in_ssh_all.id}",
+  ]
+
+  private_dns_enabled = true
+}
+
 ## Root User Config (rootid)
 
 # resource "aws_transfer_user" "sftp_user_rootid" {
